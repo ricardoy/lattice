@@ -23,12 +23,15 @@ class LatexExporter(object):
         self.width_coef = width_coef
         self.height_coef = height_coef
 
+    def node_value_to_latex(self, value):
+        return value
+
     def generate_node(self, node:SimpleNode, x, y):
         return '\\node ({}) at ({}, {}) {{{}}};\n'.format(
             node.id,
             x,
             y,
-            node.latex_representation())
+            self.node_value_to_latex(node.value))
 
     def process_nodes(self):
         visited_nodes = set()
@@ -99,9 +102,44 @@ class LatexExporter(object):
         return s
 
 
+def grid_to_latex(v, h=.1, w=.1):
+    s = ''
+    rows = len(v)
+    for i, row in enumerate(v):
+        i = rows - i - 1
+        for j, elem in enumerate(row):
+            if elem > 0:
+                s += '\\fill ({:.5f}, {:.5f}) rectangle ({:.5f}, {:.5f});\n'.format(h*(j), w*(i), h*(j+1), w*(i+1))
+            else:
+                s += '\\draw ({:.5f}, {:.5f}) rectangle ({:.5f}, {:.5f});\n'.format(h * (j), w * (i), h * (j + 1),                                                                                 w * (i + 1))
+    return s
+
+
+class LatexExporterGrid(LatexExporter):
+    def __init__(self, *args, **kwargs):
+        LatexExporter.__init__(self, *args, **kwargs)
+        self.h_grid = .1
+        self.w_grid = .1
+
+
+    def node_value_to_latex(self, value):
+        s = '\\begin{tikzpicture}\n'
+        s += grid_to_latex(value, self.h_grid, self.w_grid)
+        s += '\\end{tikzpicture}'
+        return s
+
+
 def export_latex(lattice, output_file_name=None, generate_document=True, width_coef=1, height_coef=1):
     le = LatexExporter(lattice,
                        width_coef=width_coef,
                        height_coef=height_coef)
+    with file_writer(output_file_name) as writer:
+        writer.write(le.export(generate_document))
+
+
+def export_latex_grid(lattice, output_file_name=None, generate_document=True, width_coef=1, height_coef=1):
+    le = LatexExporterGrid(lattice,
+                           width_coef=width_coef,
+                           height_coef=height_coef)
     with file_writer(output_file_name) as writer:
         writer.write(le.export(generate_document))

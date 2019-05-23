@@ -20,9 +20,6 @@ class SimpleNode(object):
     def is_leaf(self):
         return len(self.successors) == 0
 
-    def latex_representation(self):
-        return self.value
-
     def add_predecessor(self, n:SimpleNode):
         self.predecessors.append(n)
 

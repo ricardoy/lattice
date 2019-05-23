@@ -11,3 +11,7 @@ The script `draw_lattice_2.py` generates the LaTeX code for the following lattic
 The script `draw_lattice_3.py` generates the LaTeX code for the following lattice:
 
 ![image dim 3](img/dim3.png)
+
+It is also possible to plot pyramids (`draw_grid.py`):
+
+![image dim 3](img/grid.png)
