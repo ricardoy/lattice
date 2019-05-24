@@ -69,7 +69,7 @@ class Lattice(object):
     def __init__(self):
         self._supremum = None
         self._infimum = None
-        self.nodes = set()
+        self.nodes = list()
 
     @property
     def supremum(self):
@@ -96,7 +96,10 @@ class Lattice(object):
     def add_node(self, node):
         if not isinstance(node, SimpleNode):
             node = SimpleNode(node)
-        self.nodes.add(node)
+        for x in self.nodes:
+            if node.value == x.value:
+                return x
+        self.nodes.append(node)
         return node
 
     def add_edge(self, origin:SimpleNode, destination:SimpleNode):

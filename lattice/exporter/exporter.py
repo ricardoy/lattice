@@ -1,3 +1,4 @@
+import numpy as np
 import sys
 from collections import defaultdict
 from contextlib import contextmanager
@@ -33,6 +34,9 @@ class LatexExporter(object):
             y,
             self.node_value_to_latex(node.value))
 
+    def get_level(self, node):
+        return node.height
+
     def process_nodes(self):
         visited_nodes = set()
         total_nodes_by_level = defaultdict(int)
@@ -40,7 +44,7 @@ class LatexExporter(object):
             if node in visited_nodes:
                 continue
             visited_nodes.add(node)
-            level = node.height
+            level = self.get_level(node)
             total_nodes_by_level[level] += 1
 
         s = ''
@@ -50,7 +54,7 @@ class LatexExporter(object):
             if node in visited_nodes:
                 continue
             visited_nodes.add(node)
-            level = node.height
+            level = self.get_level(node)
 
             current_total_by_level[level] += 1
 
@@ -120,13 +124,51 @@ class LatexExporterGrid(LatexExporter):
         LatexExporter.__init__(self, *args, **kwargs)
         self.h_grid = .1
         self.w_grid = .1
-
+        self.ordered_dimensions = None
 
     def node_value_to_latex(self, value):
         s = '\\begin{tikzpicture}\n'
         s += grid_to_latex(value, self.h_grid, self.w_grid)
         s += '\\end{tikzpicture}'
         return s
+
+    def export(self, generate_header_footer=False):
+        if generate_header_footer:
+            s = """
+            \\documentclass[a1paper]{slides}
+            \\usepackage[margin=0pt]{geometry}
+            \\usepackage{tikz}
+            \\begin{document}\n"""
+        else:
+            s = ''
+
+        s += '\\begin{tikzpicture}\n'
+
+        s = s + self.process_nodes()
+        s = s + self.process_edges()
+
+        s += '\\end{tikzpicture}'
+
+        if generate_header_footer:
+            s = s + '\\end{document}'
+
+        return s
+
+    def _process_dimensions(self):
+        dimensions = set()
+        for x in self.lattice.nodes:
+            dimensions.add(np.array(x.value).sum())
+
+        self.ordered_dimensions = dict()
+
+        for i, x in enumerate(sorted(dimensions)):
+            self.ordered_dimensions[x] = i
+
+    def get_level(self, node):
+        if self.ordered_dimensions is None:
+            self._process_dimensions()
+
+        return self.ordered_dimensions[np.array(node.value).sum()]
 
 
 def export_latex(lattice, output_file_name=None, generate_document=True, width_coef=1, height_coef=1):
@@ -137,7 +179,7 @@ def export_latex(lattice, output_file_name=None, generate_document=True, width_c
         writer.write(le.export(generate_document))
 
 
-def export_latex_grid(lattice, output_file_name=None, generate_document=True, width_coef=1, height_coef=1):
+def export_latex_grid(lattice, output_file_name=None, generate_document=True, width_coef=1, height_coef=.5):
     le = LatexExporterGrid(lattice,
                            width_coef=width_coef,
                            height_coef=height_coef)
