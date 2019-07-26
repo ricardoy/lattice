@@ -68,8 +68,6 @@ def main():
     lattice = Lattice()
     data = dict()
 
-    # print(len(pyramids))
-
     key = binaryze_as_tuple(pyramids[0], 0)
     supremum = lattice.add_node(key)
 
@@ -88,10 +86,7 @@ def main():
 
     for chain in all_chains:
         for parent, child in zip(chain[0:-1], chain[1:]):
-            # print(type(parent), type(child))
             lattice.add_edge(parent, child)
-
-
 
     # for key1, node1 in data.items():
     #     for key2, node2 in data.items():
